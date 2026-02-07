@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 export const useSocket = (onProgress, onDone) => {
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    const socket = io("https://stream-guard-backend.onrender.com");
 
     socket.on("video-progress", onProgress);
     socket.on("video-done", onDone);
