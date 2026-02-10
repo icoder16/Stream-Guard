@@ -4,9 +4,16 @@ const Video = require("../models/Video");
 const { uploadToS3 } = require("../services/s3.service");
 const { processVideo } = require("../services/processing.service");
 const { getSignedUrl } = require("../services/stream.service");
+const { processWithRekognition } = require("../services/rekognition.processor");
+const fs = require("fs");
+const { normalizeVideo } = require("../utils/videoNormalizer");
 
 // ================= UPLOAD VIDEO =================
 exports.uploadVideo = async (req, res) => {
+
+  let originalPath;
+  let normalizedPath;
+
   try {
     if (!req.file) {
       return res.status(400).json({ msg: "No file uploaded" });
@@ -17,14 +24,15 @@ exports.uploadVideo = async (req, res) => {
     if (!title) {
       return res.status(400).json({ msg: "Title required" });
     }
+    
+    // Normalize video first
+    originalPath = req.file.path;
+    normalizedPath = await normalizeVideo(originalPath);
 
-    // Generate filename
-    const ext = req.file.originalname.split(".").pop();
-
-    const fileName = `videos/${req.user.tenantId}/${uuidv4()}.${ext}`;
+    const fileName = `videos/${req.user.tenantId}/${uuidv4()}.mp4`;
 
     // Upload to S3
-    const result = await uploadToS3(req.file, fileName);
+    const result = await uploadToS3(normalizedPath, fileName, "video/mp4");
 
     // Save in DB
     const video = await Video.create({
@@ -41,11 +49,25 @@ exports.uploadVideo = async (req, res) => {
       video
     });
 
-    processVideo(video._id);
+    processWithRekognition(video);
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Upload failed due to server error" });
+  } finally {
+
+    // cleanup
+    try {
+      if (originalPath && fs.existsSync(originalPath)) {
+        fs.unlinkSync(originalPath);
+      }
+
+      if (normalizedPath && fs.existsSync(normalizedPath)) {
+        fs.unlinkSync(normalizedPath);
+      }
+    } catch (cleanupErr) {
+      console.error("Cleanup error:", cleanupErr);
+    }
   }
 };
 

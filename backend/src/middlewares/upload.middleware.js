@@ -1,16 +1,17 @@
 const multer = require("multer");
+const path = require("path");
+const os = require("os");
 
-// Store file in memory
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Use system temp folder (cross-platform)
+    cb(null, os.tmpdir());
+  },
 
-// File filter
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("video/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only video files allowed"), false);
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
   }
-};
+});
 
 // Max 50MB
 const upload = multer({
@@ -18,7 +19,6 @@ const upload = multer({
   limits: {
     fileSize: 50 * 1024 * 1024
   },
-  fileFilter
 });
 
 module.exports = upload;
