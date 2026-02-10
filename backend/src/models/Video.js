@@ -36,7 +36,11 @@ const videoSchema = new mongoose.Schema(
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Organization"
-    }
+    },
+
+    rekognitionJobId: {
+      type: String
+    },
   },
   { timestamps: true }
 );
