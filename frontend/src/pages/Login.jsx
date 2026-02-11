@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
@@ -7,21 +8,30 @@ import { AuthContext } from "../context/AuthContext";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    const res = await api.post("/auth/login", {
-      email,
-      password
-    });
+    try{
+      const res = await api.post("/auth/login", {
+        email,
+        password
+      });
 
-    login(res.data.token, res.data.user);
-
-    navigate("/dashboard");
+      toast.success("Login successful!");
+      login(res.data.token, res.data.user);
+      navigate("/dashboard");
+    } catch(err){
+      const message = err.response?.data?.message || "Invalid username or password";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,7 +55,7 @@ export default function Login() {
         <Link to="/Register">Register here</Link>
       </div>
 
-      <button className="btn">Login</button>
+      <button className="btn" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
       </form>
     </div>
   );

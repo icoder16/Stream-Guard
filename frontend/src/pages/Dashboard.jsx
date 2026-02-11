@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import api from "../api/axios";
 import { useSocket } from "../hooks/useSocket";
@@ -83,6 +84,7 @@ export default function Dashboard() {
   // Logout
   const handleLogout = () => {
     logout();
+    toast.success("Logged out")
     navigate("/");
   };
 
@@ -175,7 +177,7 @@ export default function Dashboard() {
               }}
               onClick={() => {
                 navigator.clipboard.writeText(inviteCode);
-                alert("Copied!");
+                toast.success("Copied");
               }}
             >
               📋 Copy
@@ -298,7 +300,6 @@ export default function Dashboard() {
         {pages >= 1 && (
           <div
             style={{
-              marginTop: "25px",
               display: "flex",
               justifyContent: "center",
               gap: "15px",

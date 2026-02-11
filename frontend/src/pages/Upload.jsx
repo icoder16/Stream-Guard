@@ -1,35 +1,78 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import api from "../api/axios";
 
 export default function Upload() {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const nav = useNavigate();
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+ // Validate if file is actually a video
+  const isValidVideo = (file) => {
+    if (!file) return false;
+    
+    // Check MIME type
+    const validTypes = ['video/mp4','video/webm','video/ogg','video/quicktime','video/x-msvideo','video/x-matroska'];
+    return validTypes.includes(file.type);
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    
+    if (selectedFile) {
+      if (!isValidVideo(selectedFile)) {
+        toast.error("Please select a valid video file");
+        e.target.value = null;
+        setFile(null);
+        return;
+      }
+      // Validate file size
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        toast.error("File too large. Max size is 10MB");
+        e.target.value = null;
+        setFile(null);
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
 
   const submit = async (e) => {
 
     e.preventDefault();
 
-    if (!file || !title) {
-      setError("Title and file are required");
+    if (!title) {
+      toast.error("Please provide a title");
+      return;
+    }
+    if (!file) {
+      toast.error("Please attach a video file");
+      return;
+    }
+    if (!isValidVideo(file)) {
+      toast.error("Invalid video file");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File too large. Max size is 10MB");
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
 
       const data = new FormData();
       data.append("title", title);
       data.append("video", file);
 
       await api.post("/videos/upload", data);
-
+      toast.success("Upload started");
       nav("/dashboard");
     }
     catch (err) {
@@ -37,13 +80,13 @@ export default function Upload() {
 
       // Permission error
       if (err.response?.status === 403) {
-        setError(
+        toast.error(
           "You do not have permission to upload. Ask an admin for access."
         );
       }
       // Other error
       else {
-        setError("Upload failed. Try again.");
+        toast.error("Upload failed");
       }
     } finally {
       setLoading(false);
@@ -55,34 +98,19 @@ export default function Upload() {
       <form className="form-box" onSubmit={submit}>
         <h2>Upload</h2>
 
-        {/* Error Message */}
-        {error && (
-          <div
-            style={{
-              background: "#fee2e2",
-              color: "#991b1b",
-              padding: "10px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-              fontSize: "14px"
-            }}
-          >
-            {error}
-          </div>
-        )}
-
         <input
           placeholder="Title"
+          value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <input
           type="file"
           accept="video/*"
-          onChange={(e) => setFile(e.target.files[0])}
+          onChange={handleFileChange}
         />
 
-        <button className="btn" disabled={loading}>Upload</button>
+        <button className="btn" disabled={loading}>{loading ? "Uploading..." : "Upload"}</button>
       </form>
     </div>
   );

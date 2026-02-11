@@ -55,7 +55,7 @@ body {
 }
 
 .navbar a:hover {
-  text-decoration: underline;
+  color: lemonchiffon;
 }
 
 /* ================= FORMS ================= */
@@ -114,6 +114,11 @@ body {
 
 .btn:hover {
   background: #1d4ed8;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ================= DASHBOARD ================= */
@@ -199,6 +204,7 @@ body {
 
 .members-heading{
   margin: 20px;
+  margin-top: 30px;
 }
 
 .member-card {

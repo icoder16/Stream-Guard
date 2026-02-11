@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -14,6 +15,10 @@ import {
 
 function App() {
   return (
+    <>
+
+    <Toaster position="top-center" />
+
     <Routes>
 
       {/* Public Routes (Only if NOT logged in) */}
@@ -73,6 +78,7 @@ function App() {
       />
 
     </Routes>
+    </>
   );
 }
 

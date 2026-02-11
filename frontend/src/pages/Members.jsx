@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 import api from "../api/axios";
 
@@ -15,8 +16,17 @@ export default function Members() {
   }, []);
 
   const changeRole = async (id, role) => {
-    await api.patch(`/users/${id}/role`, { role });
-    load();
+    try{
+      await api.patch(`/users/${id}/role`, { role });
+      toast.success("Role changed successfully");
+      load();
+    } catch(err){
+      const status = err.response?.status;
+      const message = status === 400 ? "Cannot change your own role" : 
+                  status === 403 ? "Only admins can change roles" : 
+                  "An unexpected error occurred";
+      toast.error(message);
+    }
   };
 
   return (

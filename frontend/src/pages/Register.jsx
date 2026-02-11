@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
@@ -7,21 +8,31 @@ import { AuthContext } from "../context/AuthContext";
 export default function Register() {
   const [form, setForm] = useState({});
   const [type, setType] = useState("create");
+  const [loading, setLoading] = useState(false);
 
   const { login } = useContext(AuthContext);
   const nav = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    const res = await api.post("/auth/register", {
-      ...form,
-      orgType: type
-    });
+    try{
+      const res = await api.post("/auth/register", {
+        ...form,
+        orgType: type
+      });
 
-    login(res.data.token, res.data.user);
+      toast.success("Registration successful!");
+      login(res.data.token, res.data.user);
 
-    nav("/dashboard");
+      nav("/dashboard");
+    } catch(err){
+      const message = err.response?.data?.message || "Please fill all details";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,7 +62,7 @@ export default function Register() {
           <Link to="/">Login here</Link>
         </div>
 
-        <button className="btn">Register</button>
+        <button className="btn" disabled={loading}>Register</button>
       </form>
     </div>
   );
